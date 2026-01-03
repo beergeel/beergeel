@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create Dream • DreamScape</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="container" style="padding:40px 0 24px">
+    <a class="brand" href="/" style="gap:10px"><div class="logo">✦</div><span>DreamScape</span></a>
+  </div>
+  <main class="container" style="padding-bottom:60px">
+    <div class="kicker">Creator Studio</div>
+    <h1 class="title">Create Your <span class="muted">Dream</span></h1>
+    <p class="subtitle">Describe your dream and we will generate a world seed, mood, palette, and assets.</p>
+
+    <form id="create-form" style="margin-top:24px;display:grid;gap:16px;max-width:760px">
+      <textarea required name="prompt" rows="6" placeholder="An endless emerald forest with floating lanterns, bioluminescent rivers, and gentle auroras..." style="width:100%;background:rgba(134,239,172,.08);border:1px solid rgba(134,239,172,.25);border-radius:14px;padding:14px;color:var(--text);"></textarea>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <select name="style" style="background:rgba(134,239,172,.08);border:1px solid rgba(134,239,172,.25);border-radius:12px;padding:12px;color:var(--text)">
+          <option>Surreal</option>
+          <option>Cyber Forest</option>
+          <option>Mythic</option>
+          <option>Zen Minimal</option>
+        </select>
+        <button class="btn primary" type="submit">Generate World →</button>
+        <a href="/" class="btn ghost">Back</a>
+      </div>
+    </form>
+
+    <div id="result" style="margin-top:28px"></div>
+  </main>
+
+  <script>
+  const form = document.getElementById('create-form');
+  const result = document.getElementById('result');
+  form.addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(form).entries());
+    const seed = Math.random().toString(36).slice(2,10);
+    result.innerHTML = `
+      <div class="feature">
+        <div class="media">
+          <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1600&auto=format&fit=crop" alt="Generated"/>
+          <div class="sub">Style: ${data.style} • Seed: ${seed}</div>
+          <div class="caption">Your Dream World</div>
+        </div>
+      </div>
+    `;
+  });
+  </script>
+</body>
+</html>
+
+

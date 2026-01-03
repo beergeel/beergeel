@@ -1,0 +1,737 @@
+import React, { useState, useEffect } from 'react';
+
+function AccountManagement({ currentUser, db, setActiveView }) {
+    const [activeTab, setActiveTab] = useState('staff');
+    const [users, setUsers] = useState([]);
+    const [patients, setPatients] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [showAddStaffModal, setShowAddStaffModal] = useState(false);
+    const [showEditStaffModal, setShowEditStaffModal] = useState(false);
+    const [showEditPatientModal, setShowEditPatientModal] = useState(false);
+    const [editingStaff, setEditingStaff] = useState(null);
+    const [editingPatient, setEditingPatient] = useState(null);
+    const [newStaff, setNewStaff] = useState({
+        name: '',
+        username: '',
+        role: '',
+        mobile: '',
+        password: '1234'
+    });
+
+    useEffect(() => {
+        loadData();
+    }, []);
+
+    useEffect(() => {
+        if (activeTab === 'patients') {
+            filterPatients();
+        }
+    }, [searchTerm, activeTab]);
+
+    const loadData = async () => {
+        try {
+            setLoading(true);
+            const [usersData, patientsData] = await Promise.all([
+                db.getAll('users'),
+                db.getAll('patients')
+            ]);
+            setUsers(usersData);
+            setPatients(patientsData);
+        } catch (err) {
+            console.error('Error loading data:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const filterPatients = async () => {
+        try {
+            const allPatients = await db.getAll('patients');
+            const filtered = allPatients.filter(p => 
+                p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                p.mobile.includes(searchTerm)
+            );
+            setPatients(filtered);
+        } catch (err) {
+            console.error('Error filtering patients:', err);
+        }
+    };
+
+    const resetPassword = async (type, id) => {
+        const newPassword = prompt('Enter new password (default: 1234):', '1234');
+        if (!newPassword) return;
+        
+        try {
+            if (type === 'staff') {
+                const user = await db.getById('users', id);
+                if (user) {
+                    await db.update('users', id, { password: newPassword });
+                    alert(`Password reset for ${user.name}. New password: ${newPassword}`);
+                    const updatedUsers = await db.getAll('users');
+                    setUsers(updatedUsers);
+                }
+            } else if (type === 'patient') {
+                const patient = await db.getById('patients', id);
+                if (patient) {
+                    await db.update('patients', id, { password: newPassword });
+                    alert(`Password reset for ${patient.name}. New password: ${newPassword}`);
+                    const updatedPatients = await db.getAll('patients');
+                    setPatients(updatedPatients);
+                }
+            }
+        } catch (err) {
+            console.error('Error resetting password:', err);
+            alert('Error resetting password. Please try again.');
+        }
+    };
+
+    const handleAddStaff = async (e) => {
+        e.preventDefault();
+        
+        // Trim whitespace from inputs
+        const trimmedName = newStaff.name.trim();
+        const trimmedUsername = newStaff.username.trim();
+        const trimmedMobile = newStaff.mobile.trim();
+        
+        if (!trimmedName || !trimmedUsername || !newStaff.role) {
+            alert('Please fill in all required fields (Name, Username, Role)');
+            return;
+        }
+
+        // Check if username already exists
+        const existingUser = users.find(u => u.username === trimmedUsername || u.username === trimmedUsername.toString());
+        if (existingUser) {
+            alert(`Username "${trimmedUsername}" already exists. Please choose a different username.`);
+            return;
+        }
+
+        // Check if mobile number already exists (if provided)
+        if (trimmedMobile) {
+            const existingMobile = users.find(u => u.mobile === trimmedMobile && u.mobile);
+            if (existingMobile) {
+                alert(`Mobile number "${trimmedMobile}" is already in use. Please use a different mobile number.`);
+                return;
+            }
+        }
+
+        try {
+            const result = await db.add('users', {
+                name: trimmedName,
+                username: trimmedUsername,
+                role: newStaff.role,
+                mobile: trimmedMobile || trimmedUsername,
+                password: (newStaff.password && newStaff.password.trim()) || '1234'
+            });
+            
+            if (!result) {
+                alert('Error: Failed to add staff member. Please check if the username is unique and try again.');
+                return;
+            }
+            
+            alert(`Staff member "${trimmedName}" added successfully!\n\nLogin Username: ${trimmedUsername}\nPassword: ${(newStaff.password && newStaff.password.trim()) || '1234'}`);
+            setShowAddStaffModal(false);
+            setNewStaff({
+                name: '',
+                username: '',
+                role: '',
+                mobile: '',
+                password: '1234'
+            });
+            await loadData();
+        } catch (err) {
+            console.error('Error adding staff:', err);
+            alert(`Error adding staff member: ${err.message || 'Please try again.'}`);
+        }
+    };
+
+    const handleEditStaff = (user) => {
+        setEditingStaff(user);
+        setShowEditStaffModal(true);
+    };
+
+    const handleUpdateStaff = async (e) => {
+        e.preventDefault();
+        
+        if (!editingStaff.name || !editingStaff.username || !editingStaff.role) {
+            alert('Please fill in all required fields (Name, Username, Role)');
+            return;
+        }
+
+        // Check if username already exists (excluding current user)
+        const existingUser = users.find(u => u.username === editingStaff.username && u.id !== editingStaff.id);
+        if (existingUser) {
+            alert('Username already exists. Please choose a different username.');
+            return;
+        }
+
+        try {
+            await db.update('users', editingStaff.id, {
+                name: editingStaff.name,
+                username: editingStaff.username,
+                role: editingStaff.role,
+                mobile: editingStaff.mobile || editingStaff.username
+            });
+            
+            alert(`Staff member ${editingStaff.name} updated successfully!`);
+            setShowEditStaffModal(false);
+            setEditingStaff(null);
+            loadData();
+        } catch (err) {
+            console.error('Error updating staff:', err);
+            alert('Error updating staff member. Please try again.');
+        }
+    };
+
+    const handleEditPatient = (patient) => {
+        setEditingPatient(patient);
+        setShowEditPatientModal(true);
+    };
+
+    const handleUpdatePatient = async (e) => {
+        e.preventDefault();
+        
+        if (!editingPatient.name || !editingPatient.mobile) {
+            alert('Please fill in all required fields (Name, Mobile)');
+            return;
+        }
+
+        try {
+            await db.update('patients', editingPatient.id, {
+                name: editingPatient.name,
+                mobile: editingPatient.mobile,
+                age: editingPatient.age,
+                sex: editingPatient.sex
+            });
+            
+            alert(`Patient ${editingPatient.name} updated successfully!`);
+            setShowEditPatientModal(false);
+            setEditingPatient(null);
+            loadData();
+        } catch (err) {
+            console.error('Error updating patient:', err);
+            alert('Error updating patient. Please try again.');
+        }
+    };
+
+    if (currentUser.role !== 'reception') {
+        return (
+            <div className="card">
+                <div className="card-body">
+                    <div className="alert alert-danger">
+                        Access denied. Only reception can manage accounts.
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (loading) {
+        return (
+            <div className="card">
+                <div className="card-header">
+                    <i className="fas fa-users-cog"></i> Account Management
+                </div>
+                <div className="card-body text-center p-4">
+                    <div className="spinner-border" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="card">
+            <div className="card-header">
+                <i className="fas fa-users-cog"></i> Account Management
+            </div>
+            <div className="card-body">
+                <ul className="nav nav-tabs">
+                    <li className="nav-item">
+                        <a 
+                            className={`nav-link ${activeTab === 'staff' ? 'active' : ''}`}
+                            href="#"
+                            onClick={(e) => { e.preventDefault(); setActiveTab('staff'); }}
+                        >
+                            Staff Accounts
+                        </a>
+                    </li>
+                    <li className="nav-item">
+                        <a 
+                            className={`nav-link ${activeTab === 'patients' ? 'active' : ''}`}
+                            href="#"
+                            onClick={(e) => { e.preventDefault(); setActiveTab('patients'); }}
+                        >
+                            Patient Accounts
+                        </a>
+                    </li>
+                </ul>
+                
+                <div className="tab-content mt-3">
+                    {activeTab === 'staff' && (
+                        <div className="tab-pane fade show active">
+                            <div className="d-flex justify-content-between align-items-center mb-3">
+                                <h5 className="mb-0">Staff Accounts ({users.length})</h5>
+                                <button 
+                                    className="btn btn-primary"
+                                    onClick={() => setShowAddStaffModal(true)}
+                                >
+                                    <i className="fas fa-user-plus"></i> Add Staff
+                                </button>
+                            </div>
+                            <div className="table-responsive">
+                                <table className="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Name</th>
+                                            <th>Username</th>
+                                            <th>Role</th>
+                                            <th>Mobile</th>
+                                            <th>Password</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {users.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="7" className="text-center text-muted">No staff accounts found</td>
+                                            </tr>
+                                        ) : (
+                                            users.map(user => (
+                                                <tr key={user.id}>
+                                                    <td>{user.id}</td>
+                                                    <td>{user.name}</td>
+                                                    <td>{user.username}</td>
+                                                    <td><span className="badge bg-info">{user.role}</span></td>
+                                                    <td>{user.mobile || 'N/A'}</td>
+                                                    <td><code>{user.password}</code></td>
+                                                    <td>
+                                                        <button 
+                                                            className="btn btn-sm btn-primary me-2" 
+                                                            onClick={() => handleEditStaff(user)}
+                                                        >
+                                                            <i className="fas fa-edit"></i> Edit
+                                                        </button>
+                                                        <button 
+                                                            className="btn btn-sm btn-warning" 
+                                                            onClick={() => resetPassword('staff', user.id)}
+                                                        >
+                                                            <i className="fas fa-key"></i> Reset Password
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+                    
+                    {activeTab === 'patients' && (
+                        <div className="tab-pane fade show active">
+                            <h5>Patient Accounts ({patients.length})</h5>
+                            <div className="mb-3">
+                                <input 
+                                    type="text" 
+                                    className="form-control" 
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    placeholder="Search by name or mobile"
+                                />
+                            </div>
+                            <div className="table-responsive">
+                                <table className="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Name</th>
+                                            <th>Mobile</th>
+                                            <th>Age/Sex</th>
+                                            <th>Password</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {patients.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="6" className="text-center text-muted">No patients found</td>
+                                            </tr>
+                                        ) : (
+                                            patients.map(patient => (
+                                                <tr key={patient.id}>
+                                                    <td>{patient.id}</td>
+                                                    <td>{patient.name}</td>
+                                                    <td>{patient.mobile}</td>
+                                                    <td>{patient.age} yrs / {patient.sex}</td>
+                                                    <td><code>{patient.password}</code></td>
+                                                    <td>
+                                                        <button 
+                                                            className="btn btn-sm btn-primary me-2" 
+                                                            onClick={() => handleEditPatient(patient)}
+                                                        >
+                                                            <i className="fas fa-edit"></i> Edit
+                                                        </button>
+                                                        <button 
+                                                            className="btn btn-sm btn-warning" 
+                                                            onClick={() => resetPassword('patient', patient.id)}
+                                                        >
+                                                            <i className="fas fa-key"></i> Reset Password
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Add Staff Modal */}
+            {showAddStaffModal && (
+                <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                    <div className="modal-dialog">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title">
+                                    <i className="fas fa-user-plus"></i> Add New Staff Member
+                                </h5>
+                                <button 
+                                    type="button" 
+                                    className="btn-close" 
+                                    onClick={() => {
+                                        setShowAddStaffModal(false);
+                                        setNewStaff({
+                                            name: '',
+                                            username: '',
+                                            role: '',
+                                            mobile: '',
+                                            password: '1234'
+                                        });
+                                    }}
+                                ></button>
+                            </div>
+                            <form onSubmit={handleAddStaff}>
+                                <div className="modal-body">
+                                    <div className="mb-3">
+                                        <label className="form-label">Name <span className="text-danger">*</span></label>
+                                        <input 
+                                            type="text" 
+                                            className="form-control" 
+                                            value={newStaff.name}
+                                            onChange={(e) => setNewStaff({...newStaff, name: e.target.value})}
+                                            required
+                                            placeholder="Enter staff name"
+                                        />
+                                    </div>
+                                    <div className="mb-3">
+                                        <label className="form-label">Username <span className="text-danger">*</span></label>
+                                        <input 
+                                            type="text" 
+                                            className="form-control" 
+                                            value={newStaff.username}
+                                            onChange={(e) => setNewStaff({...newStaff, username: e.target.value})}
+                                            required
+                                            placeholder="Enter username or phone number"
+                                            maxLength={50}
+                                        />
+                                        <small className="form-text text-muted">Can be phone number or any unique identifier</small>
+                                    </div>
+                                    <div className="mb-3">
+                                        <label className="form-label fw-bold">
+                                            <i className="fas fa-user-tag text-primary"></i> Role <span className="text-danger">*</span>
+                                        </label>
+                                        <select 
+                                            className="form-select" 
+                                            value={newStaff.role}
+                                            onChange={(e) => setNewStaff({...newStaff, role: e.target.value})}
+                                            required
+                                            style={{ 
+                                                fontSize: '1rem',
+                                                fontWeight: '500',
+                                                border: '2px solid #3498db',
+                                                borderRadius: '8px',
+                                                padding: '10px',
+                                                backgroundColor: newStaff.role ? '#f8f9fa' : '#fff',
+                                                minHeight: '45px'
+                                            }}
+                                        >
+                                            <option value="">-- Select Role --</option>
+                                            <option value="reception">Reception Staff</option>
+                                            <option value="doctor">Doctor</option>
+                                            <option value="pharmacy">Pharmacy Staff</option>
+                                            <option value="lab">Laboratory Technician</option>
+                                        </select>
+                                        {newStaff.role && (
+                                            <div className="mt-2">
+                                                <span className="badge bg-info" style={{ fontSize: '0.9rem' }}>
+                                                    Selected: {newStaff.role.charAt(0).toUpperCase() + newStaff.role.slice(1)}
+                                                </span>
+                                            </div>
+                                        )}
+                                        <small className="form-text text-muted d-block mt-1">
+                                            Select the staff member's role in the clinic
+                                        </small>
+                                    </div>
+                                    <div className="mb-3">
+                                        <label className="form-label">Mobile</label>
+                                        <input 
+                                            type="text" 
+                                            className="form-control" 
+                                            value={newStaff.mobile}
+                                            onChange={(e) => setNewStaff({...newStaff, mobile: e.target.value})}
+                                            placeholder="Enter mobile number (optional)"
+                                            maxLength={20}
+                                        />
+                                        <small className="form-text text-muted">If not provided, username will be used as mobile</small>
+                                    </div>
+                                    <div className="mb-3">
+                                        <label className="form-label">Password</label>
+                                        <input 
+                                            type="text" 
+                                            className="form-control" 
+                                            value={newStaff.password}
+                                            onChange={(e) => setNewStaff({...newStaff, password: e.target.value})}
+                                            placeholder="Default: 1234"
+                                        />
+                                        <small className="form-text text-muted">Default password is 1234 if left empty</small>
+                                    </div>
+                                </div>
+                                <div className="modal-footer">
+                                    <button 
+                                        type="button" 
+                                        className="btn btn-secondary" 
+                                        onClick={() => {
+                                            setShowAddStaffModal(false);
+                                            setNewStaff({
+                                                name: '',
+                                                username: '',
+                                                role: '',
+                                                mobile: '',
+                                                password: '1234'
+                                            });
+                                        }}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button type="submit" className="btn btn-primary">
+                                        <i className="fas fa-save"></i> Add Staff
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Staff Modal */}
+            {showEditStaffModal && editingStaff && (
+                <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                    <div className="modal-dialog">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title">
+                                    <i className="fas fa-user-edit"></i> Edit Staff Member
+                                </h5>
+                                <button 
+                                    type="button" 
+                                    className="btn-close" 
+                                    onClick={() => {
+                                        setShowEditStaffModal(false);
+                                        setEditingStaff(null);
+                                    }}
+                                ></button>
+                            </div>
+                            <form onSubmit={handleUpdateStaff}>
+                                <div className="modal-body">
+                                    <div className="mb-3">
+                                        <label className="form-label">Name <span className="text-danger">*</span></label>
+                                        <input 
+                                            type="text" 
+                                            className="form-control" 
+                                            value={editingStaff.name}
+                                            onChange={(e) => setEditingStaff({...editingStaff, name: e.target.value})}
+                                            required
+                                            placeholder="Enter staff name"
+                                        />
+                                    </div>
+                                    <div className="mb-3">
+                                        <label className="form-label">Username <span className="text-danger">*</span></label>
+                                        <input 
+                                            type="text" 
+                                            className="form-control" 
+                                            value={editingStaff.username}
+                                            onChange={(e) => setEditingStaff({...editingStaff, username: e.target.value})}
+                                            required
+                                            placeholder="Enter username (usually mobile number)"
+                                        />
+                                    </div>
+                                    <div className="mb-3">
+                                        <label className="form-label fw-bold">
+                                            <i className="fas fa-user-tag text-primary"></i> Role <span className="text-danger">*</span>
+                                        </label>
+                                        <select 
+                                            className="form-select" 
+                                            value={editingStaff.role}
+                                            onChange={(e) => setEditingStaff({...editingStaff, role: e.target.value})}
+                                            required
+                                            style={{ 
+                                                fontSize: '1rem',
+                                                fontWeight: '500',
+                                                border: '2px solid #3498db',
+                                                borderRadius: '8px',
+                                                padding: '10px',
+                                                backgroundColor: editingStaff.role ? '#f8f9fa' : '#fff',
+                                                minHeight: '45px'
+                                            }}
+                                        >
+                                            <option value="">-- Select Role --</option>
+                                            <option value="reception">Reception Staff</option>
+                                            <option value="doctor">Doctor</option>
+                                            <option value="pharmacy">Pharmacy Staff</option>
+                                            <option value="lab">Laboratory Technician</option>
+                                        </select>
+                                        {editingStaff.role && (
+                                            <div className="mt-2">
+                                                <span className="badge bg-info" style={{ fontSize: '0.9rem' }}>
+                                                    Selected: {editingStaff.role.charAt(0).toUpperCase() + editingStaff.role.slice(1)}
+                                                </span>
+                                            </div>
+                                        )}
+                                        <small className="form-text text-muted d-block mt-1">
+                                            Select the staff member's role in the clinic
+                                        </small>
+                                    </div>
+                                    <div className="mb-3">
+                                        <label className="form-label">Mobile</label>
+                                        <input 
+                                            type="text" 
+                                            className="form-control" 
+                                            value={editingStaff.mobile || ''}
+                                            onChange={(e) => setEditingStaff({...editingStaff, mobile: e.target.value})}
+                                            placeholder="Enter mobile number (optional)"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="modal-footer">
+                                    <button 
+                                        type="button" 
+                                        className="btn btn-secondary" 
+                                        onClick={() => {
+                                            setShowEditStaffModal(false);
+                                            setEditingStaff(null);
+                                        }}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button type="submit" className="btn btn-primary">
+                                        <i className="fas fa-save"></i> Update Staff
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Patient Modal */}
+            {showEditPatientModal && editingPatient && (
+                <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                    <div className="modal-dialog">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title">
+                                    <i className="fas fa-user-edit"></i> Edit Patient
+                                </h5>
+                                <button 
+                                    type="button" 
+                                    className="btn-close" 
+                                    onClick={() => {
+                                        setShowEditPatientModal(false);
+                                        setEditingPatient(null);
+                                    }}
+                                ></button>
+                            </div>
+                            <form onSubmit={handleUpdatePatient}>
+                                <div className="modal-body">
+                                    <div className="mb-3">
+                                        <label className="form-label">Name <span className="text-danger">*</span></label>
+                                        <input 
+                                            type="text" 
+                                            className="form-control" 
+                                            value={editingPatient.name}
+                                            onChange={(e) => setEditingPatient({...editingPatient, name: e.target.value})}
+                                            required
+                                            placeholder="Enter patient name"
+                                        />
+                                    </div>
+                                    <div className="mb-3">
+                                        <label className="form-label">Mobile <span className="text-danger">*</span></label>
+                                        <input 
+                                            type="text" 
+                                            className="form-control" 
+                                            value={editingPatient.mobile}
+                                            onChange={(e) => setEditingPatient({...editingPatient, mobile: e.target.value})}
+                                            required
+                                            placeholder="Enter mobile number"
+                                        />
+                                    </div>
+                                    <div className="row">
+                                        <div className="col-md-6">
+                                            <div className="mb-3">
+                                                <label className="form-label">Age</label>
+                                                <input 
+                                                    type="number" 
+                                                    className="form-control" 
+                                                    value={editingPatient.age || ''}
+                                                    onChange={(e) => setEditingPatient({...editingPatient, age: e.target.value})}
+                                                    placeholder="Enter age"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="col-md-6">
+                                            <div className="mb-3">
+                                                <label className="form-label">Sex</label>
+                                                <select 
+                                                    className="form-select" 
+                                                    value={editingPatient.sex || ''}
+                                                    onChange={(e) => setEditingPatient({...editingPatient, sex: e.target.value})}
+                                                >
+                                                    <option value="">-- Select --</option>
+                                                    <option value="M">Male</option>
+                                                    <option value="F">Female</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="modal-footer">
+                                    <button 
+                                        type="button" 
+                                        className="btn btn-secondary" 
+                                        onClick={() => {
+                                            setShowEditPatientModal(false);
+                                            setEditingPatient(null);
+                                        }}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button type="submit" className="btn btn-primary">
+                                        <i className="fas fa-save"></i> Update Patient
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+export default AccountManagement;
