@@ -72,12 +72,12 @@ function Sidebar({ currentUser, currentRole, activeView, setActiveView, sidebarO
             <div className={`sidebar ${sidebarOpen ? 'show' : ''}`}>
                 <nav className="nav flex-column">
                     {menuItems.map((item, index) => (
-                        <a 
+                        <button 
                             key={index}
+                            type="button"
                             className={`nav-link ${activeView === item.view ? 'active' : ''}`}
-                            href="#"
-                            onClick={(e) => {
-                                e.preventDefault();
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left', color: 'inherit' }}
+                            onClick={() => {
                                 setActiveView(item.view);
                                 // Close sidebar on mobile after clicking
                                 if (window.innerWidth < 992) {
@@ -86,7 +86,7 @@ function Sidebar({ currentUser, currentRole, activeView, setActiveView, sidebarO
                             }}
                         >
                             <i className={`fas ${item.icon}`}></i> {item.text}
-                        </a>
+                        </button>
                     ))}
                 </nav>
             </div>

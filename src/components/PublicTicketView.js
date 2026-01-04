@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import jsPDF from 'jspdf';
 
 function PublicTicketView({ ticketCode, db }) {
@@ -7,11 +7,7 @@ function PublicTicketView({ ticketCode, db }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    useEffect(() => {
-        loadTicket();
-    }, [ticketCode]);
-
-    const loadTicket = async () => {
+    const loadTicket = useCallback(async () => {
         try {
             setLoading(true);
             const ticketData = await db.getTicketWithPatient(ticketCode);
@@ -28,7 +24,11 @@ function PublicTicketView({ ticketCode, db }) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [ticketCode, db]);
+
+    useEffect(() => {
+        loadTicket();
+    }, [loadTicket]);
 
     const openWhatsApp = (number) => {
         const whatsappNumber = number.replace(/\D/g, '');

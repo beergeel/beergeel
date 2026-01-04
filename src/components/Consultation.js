@@ -33,8 +33,8 @@ function Consultation({ visitId, patientId, currentUser, db, onBack }) {
                     db.getAll('prescriptions')
                 ]);
                 
-                const labRequestData = allLabRequests.find(l => l.visit_id == visitId);
-                const prescriptionData = allPrescriptions.find(p => p.visit_id == visitId);
+                const labRequestData = allLabRequests.find(l => l.visit_id === visitId);
+                const prescriptionData = allPrescriptions.find(p => p.visit_id === visitId);
                 const labResults = labRequestData?.results || '';
 
                 setPatient(patientData);
@@ -119,7 +119,7 @@ function Consultation({ visitId, patientId, currentUser, db, onBack }) {
                     db.getAll('queue')
                 ]);
                 
-                const existingLabRequest = allLabRequests.find(l => l.visit_id == visitId);
+                const existingLabRequest = allLabRequests.find(l => l.visit_id === visitId);
                 const testName = allTests.join(', ');
                 
                 if (existingLabRequest) {
@@ -164,7 +164,7 @@ function Consultation({ visitId, patientId, currentUser, db, onBack }) {
                     db.getAll('queue')
                 ]);
                 
-                const existingPrescription = allPrescriptions.find(p => p.visit_id == visitId);
+                const existingPrescription = allPrescriptions.find(p => p.visit_id === visitId);
                 if (existingPrescription) {
                     console.log('Updating existing prescription:', existingPrescription.id);
                     await db.update('prescriptions', existingPrescription.id, {
@@ -199,7 +199,7 @@ function Consultation({ visitId, patientId, currentUser, db, onBack }) {
                 await db.update('visits', visitId, { status: 'completed' });
                 const allQueue = await db.getAll('queue');
                 const queueItems = allQueue.filter(q => 
-                    q.visit_id == visitId && q.department === 'doctor'
+                    q.visit_id === visitId && q.department === 'doctor'
                 );
                 for (const item of queueItems) {
                     await db.update('queue', item.id, { status: 'completed' });

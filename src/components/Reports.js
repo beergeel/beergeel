@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -15,11 +15,7 @@ function Reports({ currentUser, db, setActiveView }) {
         loading: true
     });
 
-    useEffect(() => {
-        loadStats();
-    }, []);
-
-    const loadStats = async () => {
+    const loadStats = useCallback(async () => {
         try {
             const today = new Date().toDateString();
             
@@ -55,7 +51,11 @@ function Reports({ currentUser, db, setActiveView }) {
             console.error('Error loading stats:', err);
             setStats(prev => ({ ...prev, loading: false }));
         }
-    };
+    }, [db]);
+
+    useEffect(() => {
+        loadStats();
+    }, [loadStats]);
 
     // ========== PDF EXPORT FUNCTIONS ==========
     const exportTodayReportPDF = async () => {
