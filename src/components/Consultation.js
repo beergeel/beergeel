@@ -5,7 +5,6 @@ function Consultation({ visitId, patientId, currentUser, db, onBack }) {
     const [visit, setVisit] = useState(null);
     const [consultation, setConsultation] = useState(null);
     const [labRequest, setLabRequest] = useState(null);
-    const [prescription, setPrescription] = useState(null);
     const [formData, setFormData] = useState({
         chiefComplaint: '',
         history: '',
@@ -42,7 +41,6 @@ function Consultation({ visitId, patientId, currentUser, db, onBack }) {
                 setVisit(visitData);
                 setConsultation(consultationData);
                 setLabRequest(labRequestData);
-                setPrescription(prescriptionData);
 
                 if (consultationData) {
                     // Parse notes back into form fields (notes contains all the data)

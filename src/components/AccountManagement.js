@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 function AccountManagement({ currentUser, db, setActiveView }) {
     const [activeTab, setActiveTab] = useState('staff');
@@ -19,17 +19,7 @@ function AccountManagement({ currentUser, db, setActiveView }) {
         password: '1234'
     });
 
-    useEffect(() => {
-        loadData();
-    }, []);
-
-    useEffect(() => {
-        if (activeTab === 'patients') {
-            filterPatients();
-        }
-    }, [searchTerm, activeTab]);
-
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         try {
             setLoading(true);
             const [usersData, patientsData] = await Promise.all([
@@ -43,9 +33,9 @@ function AccountManagement({ currentUser, db, setActiveView }) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [db]);
 
-    const filterPatients = async () => {
+    const filterPatients = useCallback(async () => {
         try {
             const allPatients = await db.getAll('patients');
             const filtered = allPatients.filter(p => 
@@ -56,7 +46,17 @@ function AccountManagement({ currentUser, db, setActiveView }) {
         } catch (err) {
             console.error('Error filtering patients:', err);
         }
-    };
+    }, [db, searchTerm]);
+
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
+
+    useEffect(() => {
+        if (activeTab === 'patients') {
+            filterPatients();
+        }
+    }, [searchTerm, activeTab, filterPatients]);
 
     const resetPassword = async (type, id) => {
         const newPassword = prompt('Enter new password (default: 1234):', '1234');
@@ -249,22 +249,24 @@ function AccountManagement({ currentUser, db, setActiveView }) {
             <div className="card-body">
                 <ul className="nav nav-tabs">
                     <li className="nav-item">
-                        <a 
+                        <button 
+                            type="button"
                             className={`nav-link ${activeTab === 'staff' ? 'active' : ''}`}
-                            href="#"
-                            onClick={(e) => { e.preventDefault(); setActiveTab('staff'); }}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left' }}
+                            onClick={() => setActiveTab('staff')}
                         >
                             Staff Accounts
-                        </a>
+                        </button>
                     </li>
                     <li className="nav-item">
-                        <a 
+                        <button 
+                            type="button"
                             className={`nav-link ${activeTab === 'patients' ? 'active' : ''}`}
-                            href="#"
-                            onClick={(e) => { e.preventDefault(); setActiveTab('patients'); }}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left' }}
+                            onClick={() => setActiveTab('patients')}
                         >
                             Patient Accounts
-                        </a>
+                        </button>
                     </li>
                 </ul>
                 
