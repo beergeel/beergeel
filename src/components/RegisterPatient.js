@@ -6,13 +6,14 @@ function RegisterPatient({ currentUser, db, setActiveView }) {
         age: '',
         sex: '',
         mobile: '',
+        address: '',
         password: '1234'
     });
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const { name, age, sex, mobile, password } = formData;
+        const { name, age, sex, mobile, address, password } = formData;
 
         if (!name || !age || !sex || !mobile) {
             alert('Please fill all required fields');
@@ -33,6 +34,7 @@ function RegisterPatient({ currentUser, db, setActiveView }) {
                 age: parseInt(age),
                 sex,
                 mobile,
+                address: address || '',
                 password,
                 registered_by: currentUser.id
             });
@@ -142,6 +144,23 @@ function RegisterPatient({ currentUser, db, setActiveView }) {
                                     name="password"
                                     value={formData.password}
                                     onChange={handleChange}
+                                    disabled={loading}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="row">
+                        <div className="col-md-12">
+                            <div className="mb-3">
+                                <label className="form-label">Address</label>
+                                <input 
+                                    type="text" 
+                                    className="form-control" 
+                                    name="address"
+                                    value={formData.address}
+                                    onChange={handleChange}
+                                    placeholder="Enter patient address"
                                     disabled={loading}
                                 />
                             </div>
