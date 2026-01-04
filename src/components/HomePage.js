@@ -1,23 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 function HomePage({ onLogin, db, redirectToPatient }) {
     const [loginId, setLoginId] = useState('');
-    const [password, setPassword] = useState('1234');
-    const [role, setRole] = useState('patient');
+    const [password, setPassword] = useState('');
     const [notice, setNotice] = useState('');
 
-    useEffect(() => {
-        updateHomePageNotice();
-    }, []);
-
-    const updateHomePageNotice = async () => {
+    const updateHomePageNotice = useCallback(async () => {
         const notices = await db.getAll('notices');
         if (notices.length > 0) {
             setNotice(notices[0].content);
         } else {
             setNotice('No notice available. Please add a new notice.');
         }
-    };
+    }, [db]);
+
+    useEffect(() => {
+        updateHomePageNotice();
+    }, [updateHomePageNotice]);
 
     const handleLogin = async () => {
         // Trim inputs
@@ -25,173 +24,23 @@ function HomePage({ onLogin, db, redirectToPatient }) {
         const trimmedPassword = password.trim();
         
         if (!trimmedLoginId || !trimmedPassword) {
-            alert('Please enter login ID and password');
+            alert('Please enter your phone number and password');
             return;
         }
 
         try {
-            // If redirectToPatient is set, only allow patient login
-            if (redirectToPatient) {
-                const patient = await db.findPatientByMobile(trimmedLoginId);
-                const patientPassword = (patient?.password || '').toString().trim();
-                if (patient && patientPassword === trimmedPassword) {
-                    onLogin(patient, 'patient');
-                } else {
-                    alert('Invalid patient credentials. Please check mobile number and password.');
-                }
-            } else if (role === 'patient') {
-                const patient = await db.findPatientByMobile(trimmedLoginId);
-                const patientPassword = (patient?.password || '').toString().trim();
-                if (patient && patientPassword === trimmedPassword) {
-                    onLogin(patient, 'patient');
-                } else {
-                    alert('Invalid patient credentials. Please check mobile number and password.');
-                }
+            // Patient-only login
+            const patient = await db.findPatientByMobile(trimmedLoginId);
+            const patientPassword = (patient?.password || '').toString().trim();
+            
+            if (patient && patientPassword === trimmedPassword) {
+                onLogin(patient, 'patient');
             } else {
-                const users = await db.getAll('users');
-                
-                // Check if users array is valid
-                if (!Array.isArray(users)) {
-                    console.error('Users is not an array:', users);
-                    alert('Database error: Unable to fetch users. Please check if the users table exists in Supabase.');
-                    return;
-                }
-                
-                // Trim and normalize the login ID
-                const normalizedLoginId = trimmedLoginId;
-                
-                // Debug: Log all users to see what's in the database
-                console.log('All users in database:', users);
-                console.log('Login attempt:', { 
-                    loginId: normalizedLoginId, 
-                    password: trimmedPassword, 
-                    role: role,
-                    loginIdType: typeof normalizedLoginId,
-                    loginIdLength: normalizedLoginId.length
-                });
-                
-                // Find user with normalized comparison (handle both string and number comparisons)
-                // Allow login with either username OR mobile number
-                const user = users.find(u => {
-                    // Convert to string and trim for comparison
-                    let dbUsername = u.username;
-                    // Handle if username is stored as number (preserve leading zeros by converting to string)
-                    if (typeof dbUsername === 'number') {
-                        dbUsername = dbUsername.toString();
-                    }
-                    const normalizedUsername = (dbUsername || '').toString().trim();
-                    
-                    // Also check mobile number
-                    let dbMobile = u.mobile;
-                    if (typeof dbMobile === 'number') {
-                        dbMobile = dbMobile.toString();
-                    }
-                    const normalizedMobile = (dbMobile || '').toString().trim();
-                    
-                    const normalizedPassword = (u.password || '').toString().trim();
-                    const normalizedRole = (u.role || '').toString().trim();
-                    const normalizedInputPassword = trimmedPassword;
-                    const normalizedInputRole = role.trim().toString();
-                    
-                    // Check if login ID matches either username OR mobile
-                    const usernameMatch = normalizedUsername === normalizedLoginId;
-                    const mobileMatch = normalizedMobile === normalizedLoginId;
-                    const identifierMatch = usernameMatch || mobileMatch;
-                    const passwordMatch = normalizedPassword === normalizedInputPassword;
-                    const roleMatch = normalizedRole === normalizedInputRole;
-                    
-                    if (identifierMatch) {
-                        console.log('Identifier match found:', {
-                            originalUsername: u.username,
-                            dbUsername: normalizedUsername,
-                            originalMobile: u.mobile,
-                            dbMobile: normalizedMobile,
-                            matchedBy: usernameMatch ? 'username' : 'mobile',
-                            dbPassword: normalizedPassword,
-                            dbRole: normalizedRole,
-                            inputPassword: normalizedInputPassword,
-                            inputRole: normalizedInputRole,
-                            passwordMatch: passwordMatch,
-                            roleMatch: roleMatch
-                        });
-                    }
-                    
-                    return identifierMatch && passwordMatch && roleMatch;
-                });
-                
-                if (user) {
-                    console.log('Login successful for user:', user);
-                    onLogin(user, role);
-                } else {
-                    // Find if username exists but password or role doesn't match
-                    const userWithUsername = users.find(u => {
-                        const normalizedUsername = (u.username || '').toString().trim();
-                        return normalizedUsername === normalizedLoginId;
-                    });
-                    
-                    // Check if login ID matches username or mobile
-                    const userWithIdentifier = users.find(u => {
-                        let dbUsername = u.username;
-                        if (typeof dbUsername === 'number') {
-                            dbUsername = dbUsername.toString();
-                        }
-                        const normalizedUsername = (dbUsername || '').toString().trim();
-                        
-                        let dbMobile = u.mobile;
-                        if (typeof dbMobile === 'number') {
-                            dbMobile = dbMobile.toString();
-                        }
-                        const normalizedMobile = (dbMobile || '').toString().trim();
-                        
-                        return normalizedUsername === normalizedLoginId || normalizedMobile === normalizedLoginId;
-                    });
-                    
-                    if (userWithIdentifier) {
-                        let dbUsername = userWithIdentifier.username;
-                        if (typeof dbUsername === 'number') {
-                            dbUsername = dbUsername.toString();
-                        }
-                        const normalizedDbUsername = (dbUsername || '').toString().trim();
-                        
-                        let dbMobile = userWithIdentifier.mobile;
-                        if (typeof dbMobile === 'number') {
-                            dbMobile = dbMobile.toString();
-                        }
-                        const normalizedDbMobile = (dbMobile || '').toString().trim();
-                        
-                        const dbPassword = (userWithIdentifier.password || '').toString().trim();
-                        const dbRole = (userWithIdentifier.role || '').toString().trim();
-                        console.error('User found but credentials mismatch:', {
-                            foundUser: userWithIdentifier,
-                            originalUsername: userWithIdentifier.username,
-                            normalizedDbUsername: normalizedDbUsername,
-                            originalMobile: userWithIdentifier.mobile,
-                            normalizedDbMobile: normalizedDbMobile,
-                            inputLoginId: normalizedLoginId,
-                            inputPassword: trimmedPassword,
-                            dbPassword: dbPassword,
-                            passwordMatch: dbPassword === trimmedPassword,
-                            inputRole: role,
-                            dbRole: dbRole,
-                            roleMatch: dbRole === role
-                        });
-                        const identifierType = normalizedDbUsername === normalizedLoginId ? 'username' : 'mobile';
-                        alert(`Invalid credentials for "${userWithIdentifier.name}".\n\nFound user with ${identifierType} "${normalizedLoginId}" but:\n${dbPassword !== trimmedPassword ? `- Password doesn't match (DB: "${dbPassword}", Input: "${trimmedPassword}")` : ''}${dbRole !== role ? `- Role doesn't match (DB: "${dbRole}", Input: "${role}")` : ''}\n\nPlease check the password and role selection.`);
-                    } else {
-                        // Username/mobile not found
-                        const availableDoctors = users.filter(u => u.role === 'doctor').map(u => {
-                            const username = (u.username || '').toString().trim();
-                            const mobile = (u.mobile || '').toString().trim();
-                            return mobile ? `${username} (or mobile: ${mobile})` : username;
-                        });
-                        console.error('Identifier not found. Available doctor identifiers:', availableDoctors);
-                        alert(`Username/Phone "${normalizedLoginId}" not found.\n\nAvailable doctor login options:\n${availableDoctors.length > 0 ? availableDoctors.join('\n') : 'No doctors found in database'}\n\nYou can login with either the username or mobile number.\nPlease check and try again, or contact reception to verify your account.`);
-                    }
-                }
+                alert('Invalid credentials. Please check your phone number and password, or contact the clinic for assistance.');
             }
         } catch (error) {
             console.error('Login error:', error);
-            alert(`Login error: ${error.message}. Please check if Supabase tables are created.`);
+            alert(`Login error: ${error.message}. Please try again or contact the clinic.`);
         }
     };
 
@@ -227,21 +76,19 @@ function HomePage({ onLogin, db, redirectToPatient }) {
                     </div>
                     
                     <div className="login-section">
-                        <h3 className="login-title">{redirectToPatient ? 'Patient Login' : 'System Login'}</h3>
-                        {redirectToPatient && (
-                            <div className="alert alert-info mb-3">
-                                <i className="fas fa-info-circle"></i> Please login with your patient credentials to view your medical information.
-                            </div>
-                        )}
+                        <h3 className="login-title">Patient Portal Login</h3>
+                        <div className="alert alert-info mb-3">
+                            <i className="fas fa-info-circle"></i> Please login with your phone number and password to access your medical information.
+                        </div>
                         
                         <div className="mb-3">
-                            <label className="form-label">Login ID (Phone Number)</label>
+                            <label className="form-label">Phone Number</label>
                             <input 
                                 type="text" 
                                 className="form-control" 
                                 value={loginId}
                                 onChange={(e) => setLoginId(e.target.value)}
-                                placeholder="e.g., 4026635"
+                                placeholder="Enter your phone number"
                             />
                         </div>
                         
@@ -252,28 +99,12 @@ function HomePage({ onLogin, db, redirectToPatient }) {
                                 className="form-control" 
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
+                                placeholder="Enter your password"
                             />
                         </div>
                         
-                        {!redirectToPatient && (
-                            <div className="mb-3">
-                                <label className="form-label">Login As</label>
-                                <select 
-                                    className="form-select" 
-                                    value={role}
-                                    onChange={(e) => setRole(e.target.value)}
-                                >
-                                    <option value="patient">Patient</option>
-                                    <option value="reception">Reception</option>
-                                    <option value="doctor">Doctor</option>
-                                    <option value="pharmacy">Pharmacy</option>
-                                    <option value="lab">Laboratory</option>
-                                </select>
-                            </div>
-                        )}
-                        
                         <button className="btn btn-primary w-100" onClick={handleLogin}>
-                            <i className="fas fa-sign-in-alt"></i> {redirectToPatient ? 'Login to View Information' : 'Login to System'}
+                            <i className="fas fa-sign-in-alt"></i> Login to Patient Portal
                         </button>
                     </div>
                 </div>
