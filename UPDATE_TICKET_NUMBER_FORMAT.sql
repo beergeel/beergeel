@@ -1,11 +1,12 @@
 -- Update Ticket Number Format to Sequential (1-1000)
 -- Run this SQL in your Supabase SQL Editor
 
--- Drop the old trigger
+-- Drop the old trigger first
+DROP TRIGGER IF EXISTS before_insert_patient_tickets ON patient_tickets;
 DROP TRIGGER IF EXISTS trigger_set_ticket_identifiers ON patient_tickets;
 
--- Drop the old function
-DROP FUNCTION IF EXISTS set_ticket_identifiers();
+-- Drop the old function with CASCADE to remove dependencies
+DROP FUNCTION IF EXISTS set_ticket_identifiers() CASCADE;
 
 -- Create new function for sequential ticket numbers
 CREATE OR REPLACE FUNCTION set_ticket_identifiers()
