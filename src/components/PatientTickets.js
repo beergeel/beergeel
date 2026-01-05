@@ -149,56 +149,49 @@ function PatientTickets({ db, currentUser }) {
         
         // Step 2: Format appointment date if exists
         const appointmentText = ticket.appointment_date 
-            ? `📅 Appointment: ${new Date(ticket.appointment_date).toLocaleString('en-US', {
+            ? new Date(ticket.appointment_date).toLocaleString('en-US', {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit'
-            })}`
-            : '📅 Appointment: Not scheduled yet';
+            })
+            : 'Not scheduled yet';
         
         // Step 3: Format ticket status
-        const statusEmoji = {
-            'active': '✅',
-            'used': '✓',
-            'cancelled': '❌',
-            'expired': '⏰'
-        };
-        const statusText = `${statusEmoji[ticket.status] || '📋'} Status: ${ticket.status?.toUpperCase() || 'ACTIVE'}`;
+        const statusText = ticket.status?.toUpperCase() || 'ACTIVE';
         
         // Step 4: Build comprehensive message with all ticket information
-        const message = `🏥 *Beergeel Clinic Appointment Ticket*
+        // Using simple characters that work well with WhatsApp encoding
+        const message = `*BEERGEEL CLINIC APPOINTMENT TICKET*
 
-👤 Patient: ${ticket.patient?.name || 'N/A'}
-📱 Mobile: ${ticket.patient?.mobile || ticket.whatsapp_number || 'N/A'}
+*Patient Information:*
+Name: ${ticket.patient?.name || 'N/A'}
+Mobile: ${ticket.patient?.mobile || ticket.whatsapp_number || 'N/A'}
 
-🎫 *Ticket Information:*
-━━━━━━━━━━━━━━━━
-🔢 Ticket Code: *${ticket.ticket_code}*
-📄 Ticket Number: ${ticket.ticket_number}
-🏷️ Purpose: ${ticket.purpose || 'Consultation'}
-${appointmentText}
-${statusText}
-━━━━━━━━━━━━━━━━
+*Ticket Details:*
+Ticket Code: *${ticket.ticket_code}*
+Ticket Number: ${ticket.ticket_number}
+Purpose: ${ticket.purpose || 'Consultation'}
+Appointment: ${appointmentText}
+Status: ${statusText}
+${ticket.notes ? `\nNotes: ${ticket.notes}` : ''}
 
-${ticket.notes ? `📝 Notes: ${ticket.notes}\n\n` : ''}🔗 *View Your Ticket Online:*
+*View Your Ticket Online:*
 ${link}
 
-📍 Clinic Address:
-Xero awr kasoo horjeedka Ayuub Restaurant inyar ka xiga dhanka Masjid Nuur
+*Clinic Information:*
+Beergeel Obstetrics and Gynecology Clinic
+Takhasusuka sare ee xanuunada dumarka
 
-📞 Contact Us:
-Mobile/WhatsApp: 04026635
+Address: Xero awr kasoo horjeedka Ayuub Restaurant inyar ka xiga dhanka Masjid Nuur
 
-⏰ Clinic Hours:
-5:00 PM - 10:00 PM
+Contact: 04026635
+Hours: 5:00 PM - 10:00 PM
 Emergency: 24/7
 
-━━━━━━━━━━━━━━━━
-_Beergeel Obstetrics and Gynecology Clinic_
-_Takhasusuka sare ee xanuunada dumarka_`;
+Thank you for choosing Beergeel Clinic!`;
         
         // Step 5: Clean phone number (remove all non-digits)
         const cleanPhoneNumber = ticket.whatsapp_number.replace(/\D/g, '');
