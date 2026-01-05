@@ -190,9 +190,8 @@ function PatientTickets({ db, currentUser }) {
             })
             : 'Not scheduled yet';
         
-        // Step 3: Extract simple ticket number (TKT-20260105-0016 -> 16)
-        const ticketNumberMatch = ticket.ticket_number.match(/-(\d+)$/);
-        const simpleTicketNumber = ticketNumberMatch ? parseInt(ticketNumberMatch[1]).toString() : ticket.ticket_number;
+        // Step 3: Get ticket number (already in simple format: 1, 2, 3, etc.)
+        const simpleTicketNumber = ticket.ticket_number;
         
         // Step 4: Format ticket status
         const statusText = ticket.status?.toUpperCase() || 'ACTIVE';
