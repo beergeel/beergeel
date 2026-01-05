@@ -190,20 +190,24 @@ function PatientTickets({ db, currentUser }) {
             })
             : 'Not scheduled yet';
         
-        // Step 3: Format ticket status
+        // Step 3: Extract simple ticket number (TKT-20260105-0016 -> 16)
+        const ticketNumberMatch = ticket.ticket_number.match(/-(\d+)$/);
+        const simpleTicketNumber = ticketNumberMatch ? parseInt(ticketNumberMatch[1]).toString() : ticket.ticket_number;
+        
+        // Step 4: Format ticket status
         const statusText = ticket.status?.toUpperCase() || 'ACTIVE';
         
-        // Step 4: Build comprehensive message with all ticket information
+        // Step 5: Build comprehensive message with all ticket information
         // Using simple characters that work well with WhatsApp encoding
         const message = `*BEERGEEL CLINIC APPOINTMENT TICKET*
+
+*YOUR TICKET NUMBER: ${simpleTicketNumber}*
 
 *Patient Information:*
 Name: ${ticket.patient?.name || 'N/A'}
 Mobile: ${ticket.patient?.mobile || ticket.whatsapp_number || 'N/A'}
 
-*Ticket Details:*
-Ticket Code: *${ticket.ticket_code}*
-Ticket Number: ${ticket.ticket_number}
+*Appointment Details:*
 Purpose: ${ticket.purpose || 'Consultation'}
 Appointment: ${appointmentText}
 Status: ${statusText}
@@ -218,7 +222,7 @@ Takhasusuka sare ee xanuunada dumarka
 
 Address: Xero awr kasoo horjeedka Ayuub Restaurant inyar ka xiga dhanka Masjid Nuur
 
-Contact: 04026635
+Contact: 03051980
 Hours: 5:00 PM - 10:00 PM
 Emergency: 24/7
 
