@@ -62,15 +62,46 @@ function PatientTickets({ db, currentUser }) {
         e.preventDefault();
         
         if (!selectedPatient) {
-            alert('⚠️ Please select a patient first!\n\nScroll up to search and select a patient from the list.');
-            // Scroll to top of form to show patient selection
+            alert('Please select a patient first!');
             document.querySelector('.card-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             return;
         }
 
         if (!purpose) {
-            alert('⚠️ Please select a purpose for the ticket!');
+            alert('Please select a purpose for the ticket!');
             return;
+        }
+
+        // Check daily ticket limit
+        try {
+            const allTickets = await db.getAll('patient_tickets');
+            const today = new Date().toDateString();
+            const ticketsToday = allTickets.filter(ticket => {
+                const ticketDate = new Date(ticket.created_date).toDateString();
+                return ticketDate === today;
+            });
+
+            // Get daily limit from settings
+            const settings = await db.getAll('clinic_settings');
+            const limitSetting = settings.find(s => s.setting_key === 'daily_ticket_limit');
+            const dailyLimit = limitSetting ? parseInt(limitSetting.setting_value) : 50;
+
+            // Check if limit reached
+            if (ticketsToday.length >= dailyLimit) {
+                alert(`Daily ticket limit reached! (${ticketsToday.length}/${dailyLimit})\n\nPlease contact administration to increase the limit or try again tomorrow.`);
+                return;
+            }
+
+            // Show warning if close to limit
+            if (ticketsToday.length >= dailyLimit * 0.9) {
+                const remaining = dailyLimit - ticketsToday.length;
+                if (!window.confirm(`Warning: Only ${remaining} tickets remaining today (${ticketsToday.length}/${dailyLimit} used).\n\nDo you want to continue?`)) {
+                    return;
+                }
+            }
+        } catch (err) {
+            console.log('Could not check ticket limit:', err);
+            // Continue anyway if settings table doesn't exist
         }
 
         const ticketData = {
@@ -87,7 +118,7 @@ function PatientTickets({ db, currentUser }) {
             const newTicket = await db.createTicket(ticketData);
             
             if (newTicket) {
-                alert('✅ Ticket created successfully!\n\nTicket Code: ' + newTicket.ticket_code + '\nTicket Number: ' + newTicket.ticket_number);
+                alert('Ticket created successfully!\n\nTicket Number: ' + newTicket.ticket_number + '\nTicket Code: ' + newTicket.ticket_code);
                 resetForm();
                 loadTickets();
                 setShowCreateForm(false);

@@ -19,6 +19,7 @@ import LabQueue from './LabQueue';
 import LabTests from './LabTests';
 import PatientHistory from './PatientHistory';
 import PatientTickets from './PatientTickets';
+import TicketLimits from './TicketLimits';
 
 function MainApp({ currentUser, currentRole, onLogout, db }) {
     const [activeView, setActiveView] = useState('dashboard');
@@ -203,6 +204,8 @@ function MainApp({ currentUser, currentRole, onLogout, db }) {
                 return <PatientHistory currentUser={currentUser} db={db} setActiveView={setActiveView} />;
             case 'patientTickets':
                 return <PatientTickets currentUser={currentUser} db={db} setActiveView={setActiveView} />;
+            case 'ticketLimits':
+                return <TicketLimits currentUser={currentUser} db={db} setActiveView={setActiveView} />;
             case 'printReport':
                 printPatientReport().then(() => {
                     setActiveView('dashboard');

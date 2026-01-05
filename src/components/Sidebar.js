@@ -10,6 +10,7 @@ function Sidebar({ currentUser, currentRole, activeView, setActiveView, sidebarO
                     { icon: 'fa-stethoscope', text: 'Create Visit', view: 'createVisit' },
                     { icon: 'fa-list', text: 'Patient List', view: 'patientList' },
                     { icon: 'fa-ticket-alt', text: 'Patient Tickets', view: 'patientTickets' },
+                    { icon: 'fa-calculator', text: 'Ticket Limits', view: 'ticketLimits' },
                     { icon: 'fa-money-bill', text: 'Financial', view: 'financial' },
                     { icon: 'fa-users-cog', text: 'Account Management', view: 'accountManagement' },
                     { icon: 'fa-bell', text: 'Notice Board', view: 'noticeBoard' },
