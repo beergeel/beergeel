@@ -109,11 +109,37 @@ function PatientList({ currentUser, currentRole, db, setActiveView }) {
     };
 
     const shareViaWhatsApp = (patientId, patientMobile, patientName) => {
+        // Step 1: Generate the patient link
         const baseUrl = window.location.origin;
         const patientLink = `${baseUrl}/patient/${patientId}`;
-        const whatsappNumber = '2524026635'; // Clinic WhatsApp number
-        const message = `Hello ${patientName}, here is your link to view your medical information at Beergeel Clinic:\n\n${patientLink}\n\nPlease save this link to access your records anytime.`;
-        const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+        
+        // Step 2: Convert phone number to international format
+        // Remove all non-digits first
+        let cleanNumber = patientMobile.replace(/\D/g, '');
+        
+        // If number starts with 0, remove it and add country code 252 (Somalia)
+        if (cleanNumber.startsWith('0')) {
+            cleanNumber = '252' + cleanNumber.substring(1);
+        }
+        // If number doesn't have country code, add 252
+        else if (!cleanNumber.startsWith('252')) {
+            cleanNumber = '252' + cleanNumber;
+        }
+        
+        // Step 3: Build message
+        const message = `Hello ${patientName}, here is your link to view your medical information at Beergeel Clinic:
+
+${patientLink}
+
+Please save this link to access your records anytime.
+
+*Beergeel Obstetrics and Gynecology Clinic*
+Contact: 03051980`;
+        
+        // Step 4: Create WhatsApp link to PATIENT's number (not clinic number)
+        const whatsappLink = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
+        
+        // Step 5: Open WhatsApp
         window.open(whatsappLink, '_blank');
     };
 
@@ -175,7 +201,7 @@ function PatientList({ currentUser, currentRole, db, setActiveView }) {
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
             doc.text('Xero awr kasoo horjeedka Ayuub Restaurant inyar ka xiga dhanka Masjid Nuur', pageWidth / 2, 23, { align: 'center' });
-            doc.text('Contact: 04026635 (Mobile/WhatsApp)', pageWidth / 2, 30, { align: 'center' });
+            doc.text('Contact: 03051980 (Mobile/WhatsApp)', pageWidth / 2, 30, { align: 'center' });
 
             // Reset text color
             doc.setTextColor(0, 0, 0);

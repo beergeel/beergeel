@@ -1048,7 +1048,7 @@ function PublicPatientView({ patientId, db, currentUser, currentRole, onLogout }
                         
                         <div className="contact-buttons">
                             <a 
-                                href="tel:+2524026635" 
+                                href="tel:+2523051980" 
                                 className="btn btn-outline-primary btn-contact"
                             >
                                 <i className="fas fa-phone"></i> Call Clinic
@@ -1056,7 +1056,7 @@ function PublicPatientView({ patientId, db, currentUser, currentRole, onLogout }
                             
                             <button 
                                 className="btn btn-success btn-contact"
-                                onClick={() => openWhatsApp('2524026635')}
+                                onClick={() => openWhatsApp('2523051980')}
                             >
                                 <i className="fab fa-whatsapp"></i> WhatsApp
                             </button>
