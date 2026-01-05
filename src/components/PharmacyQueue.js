@@ -330,39 +330,6 @@ function PharmacyQueue({ currentUser, db, setActiveView }) {
                                                     {prescription?.medication || prescription?.drugs || 'No prescription found'}
                                                 </div>
                                             </div>
-                                            
-                                            {/* Quantity Display Card - Always show if prescription exists */}
-                                            {prescription && (() => {
-                                                const extracted = extractQuantity(prescription);
-                                                const currentQuantity = quantities[visit.id] !== undefined 
-                                                    ? quantities[visit.id] 
-                                                    : extracted.quantity;
-                                                const unit = extracted.unit;
-                                                
-                                                return (
-                                                    <div className="quantity-section mt-3" style={{ display: 'block', width: '100%' }}>
-                                                        <div className="quantity-display-card" style={{ display: 'block', width: '100%' }}>
-                                                            <div className="quantity-header">
-                                                                QUANTITY
-                                                            </div>
-                                                            <div className="quantity-content">
-                                                                {currentQuantity} {unit}
-                                                            </div>
-                                                        </div>
-                                                        
-                                                        <div className="quantity-input-wrapper mt-2">
-                                                            <label className="form-label small mb-1">Adjust Quantity:</label>
-                                                            <input
-                                                                type="number"
-                                                                className="quantity-input"
-                                                                value={currentQuantity}
-                                                                onChange={(e) => handleQuantityChange(visit.id, e.target.value)}
-                                                                min="1"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })()}
                                         </div>
                                     );
                                 })}

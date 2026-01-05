@@ -37,7 +37,7 @@ function HomePage({ onLogin, db, redirectToPatient }) {
                 if (patient && patientPassword === trimmedPassword) {
                     onLogin(patient, 'patient');
                 } else {
-                    alert('Invalid patient credentials. Please check mobile number and password.');
+                    alert('Invalid credential');
                 }
             } else if (role === 'patient') {
                 const patient = await db.findPatientByMobile(trimmedLoginId);
@@ -45,7 +45,7 @@ function HomePage({ onLogin, db, redirectToPatient }) {
                 if (patient && patientPassword === trimmedPassword) {
                     onLogin(patient, 'patient');
                 } else {
-                    alert('Invalid patient credentials. Please check mobile number and password.');
+                    alert('Invalid credential');
                 }
             } else {
                 const users = await db.getAll('users');
@@ -123,70 +123,7 @@ function HomePage({ onLogin, db, redirectToPatient }) {
                     console.log('Login successful for user:', user);
                     onLogin(user, role);
                 } else {
-                    // Find if username exists but password or role doesn't match
-                    const userWithUsername = users.find(u => {
-                        const normalizedUsername = (u.username || '').toString().trim();
-                        return normalizedUsername === normalizedLoginId;
-                    });
-                    
-                    // Check if login ID matches username or mobile
-                    const userWithIdentifier = users.find(u => {
-                        let dbUsername = u.username;
-                        if (typeof dbUsername === 'number') {
-                            dbUsername = dbUsername.toString();
-                        }
-                        const normalizedUsername = (dbUsername || '').toString().trim();
-                        
-                        let dbMobile = u.mobile;
-                        if (typeof dbMobile === 'number') {
-                            dbMobile = dbMobile.toString();
-                        }
-                        const normalizedMobile = (dbMobile || '').toString().trim();
-                        
-                        return normalizedUsername === normalizedLoginId || normalizedMobile === normalizedLoginId;
-                    });
-                    
-                    if (userWithIdentifier) {
-                        let dbUsername = userWithIdentifier.username;
-                        if (typeof dbUsername === 'number') {
-                            dbUsername = dbUsername.toString();
-                        }
-                        const normalizedDbUsername = (dbUsername || '').toString().trim();
-                        
-                        let dbMobile = userWithIdentifier.mobile;
-                        if (typeof dbMobile === 'number') {
-                            dbMobile = dbMobile.toString();
-                        }
-                        const normalizedDbMobile = (dbMobile || '').toString().trim();
-                        
-                        const dbPassword = (userWithIdentifier.password || '').toString().trim();
-                        const dbRole = (userWithIdentifier.role || '').toString().trim();
-                        console.error('User found but credentials mismatch:', {
-                            foundUser: userWithIdentifier,
-                            originalUsername: userWithIdentifier.username,
-                            normalizedDbUsername: normalizedDbUsername,
-                            originalMobile: userWithIdentifier.mobile,
-                            normalizedDbMobile: normalizedDbMobile,
-                            inputLoginId: normalizedLoginId,
-                            inputPassword: trimmedPassword,
-                            dbPassword: dbPassword,
-                            passwordMatch: dbPassword === trimmedPassword,
-                            inputRole: role,
-                            dbRole: dbRole,
-                            roleMatch: dbRole === role
-                        });
-                        const identifierType = normalizedDbUsername === normalizedLoginId ? 'username' : 'mobile';
-                        alert(`Invalid credentials for "${userWithIdentifier.name}".\n\nFound user with ${identifierType} "${normalizedLoginId}" but:\n${dbPassword !== trimmedPassword ? `- Password doesn't match (DB: "${dbPassword}", Input: "${trimmedPassword}")` : ''}${dbRole !== role ? `- Role doesn't match (DB: "${dbRole}", Input: "${role}")` : ''}\n\nPlease check the password and role selection.`);
-                    } else {
-                        // Username/mobile not found
-                        const availableDoctors = users.filter(u => u.role === 'doctor').map(u => {
-                            const username = (u.username || '').toString().trim();
-                            const mobile = (u.mobile || '').toString().trim();
-                            return mobile ? `${username} (or mobile: ${mobile})` : username;
-                        });
-                        console.error('Identifier not found. Available doctor identifiers:', availableDoctors);
-                        alert(`Username/Phone "${normalizedLoginId}" not found.\n\nAvailable doctor login options:\n${availableDoctors.length > 0 ? availableDoctors.join('\n') : 'No doctors found in database'}\n\nYou can login with either the username or mobile number.\nPlease check and try again, or contact reception to verify your account.`);
-                    }
+                    alert('Invalid credential');
                 }
             }
         } catch (error) {

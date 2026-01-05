@@ -120,101 +120,109 @@ function Consultations({ currentUser, db, setActiveView }) {
     }
 
     return (
-        <div className="card">
-            <div className="card-header d-flex justify-content-between align-items-center">
-                <div>
-                    <i className="fas fa-clipboard"></i> All Consultations
-                    <span className="badge bg-primary ms-2">{consultations.length} Total</span>
+        <>
+            <div className="card">
+                <div className="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <i className="fas fa-clipboard"></i> All Consultations
+                        <span className="badge bg-primary ms-2">{consultations.length} Total</span>
+                    </div>
+                    <button 
+                        className="btn btn-sm btn-outline-light" 
+                        onClick={loadData}
+                        title="Refresh"
+                    >
+                        <i className="fas fa-sync-alt"></i> Refresh
+                    </button>
                 </div>
-                <button 
-                    className="btn btn-sm btn-outline-light" 
-                    onClick={loadData}
-                    title="Refresh"
-                >
-                    <i className="fas fa-sync-alt"></i> Refresh
-                </button>
-            </div>
-            <div className="card-body">
-                <div className="table-responsive">
-                    <table className="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Patient</th>
-                                <th>Date</th>
-                                <th>Chief Complaint</th>
-                                <th>Diagnosis</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {consultations.length === 0 ? (
+                <div className="card-body">
+                    <div className="table-responsive">
+                        <table className="table table-hover">
+                            <thead>
                                 <tr>
-                                    <td colSpan="6" className="text-center text-muted">No consultations found</td>
+                                    <th>Patient</th>
+                                    <th>Date</th>
+                                    <th>Chief Complaint</th>
+                                    <th>Diagnosis</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
                                 </tr>
-                            ) : (
-                                consultations.map(consultation => {
-                                    const visit = visits.find(v => v.id == consultation.visit_id);
-                                    const patient = patients.find(p => p.id == visit?.patient_id);
-                                    const queueItem = queue.find(q => q.visit_id == consultation.visit_id && q.department === 'doctor');
-                                    const status = queueItem?.status === 'completed' ? 'Completed' : 
-                                                 queueItem?.status === 'pending' ? 'In Progress' : 'In Progress';
-                                    
-                                    return (
-                                        <tr key={consultation.id}>
-                                            <td>{patient?.name || 'Unknown'}</td>
-                                            <td>{new Date(consultation.created_date).toLocaleDateString()}</td>
-                                            <td>
-                                                {(() => {
-                                                    // Extract chief complaint from notes
-                                                    const notes = consultation.notes || '';
-                                                    const match = notes.match(/Chief Complaint:\s*(.+?)(?:\n|$)/);
-                                                    const chiefComplaint = match ? match[1].trim() : (notes.substring(0, 50) || 'N/A');
-                                                    return chiefComplaint.length > 50 ? chiefComplaint.substring(0, 50) + '...' : chiefComplaint;
-                                                })()}
-                                            </td>
-                                            <td>
-                                                {(consultation.diagnosis || 'Not specified').substring(0, 30)}
-                                                {consultation.diagnosis && consultation.diagnosis.length > 30 ? '...' : ''}
-                                            </td>
-                                            <td>
-                                                <span className={`badge ${status === 'Completed' ? 'bg-success' : 'bg-info'}`}>
-                                                    {status}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <button 
-                                                    className="btn btn-sm btn-info" 
-                                                    onClick={() => viewConsultationDetails(consultation.id)}
-                                                >
-                                                    <i className="fas fa-eye"></i> View
-                                                </button>
-                                                {status !== 'Completed' && patient && (
+                            </thead>
+                            <tbody>
+                                {consultations.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="6" className="text-center text-muted">No consultations found</td>
+                                    </tr>
+                                ) : (
+                                    consultations.map(consultation => {
+                                        const visit = visits.find(v => v.id == consultation.visit_id);
+                                        const patient = patients.find(p => p.id == visit?.patient_id);
+                                        const queueItem = queue.find(q => q.visit_id == consultation.visit_id && q.department === 'doctor');
+                                        const status = queueItem?.status === 'completed' ? 'Completed' : 
+                                                     queueItem?.status === 'pending' ? 'In Progress' : 'In Progress';
+                                        
+                                        return (
+                                            <tr key={consultation.id}>
+                                                <td>{patient?.name || 'Unknown'}</td>
+                                                <td>{new Date(consultation.created_date).toLocaleDateString()}</td>
+                                                <td>
+                                                    {(() => {
+                                                        // Extract chief complaint from notes
+                                                        const notes = consultation.notes || '';
+                                                        const match = notes.match(/Chief Complaint:\s*(.+?)(?:\n|$)/);
+                                                        const chiefComplaint = match ? match[1].trim() : (notes.substring(0, 50) || 'N/A');
+                                                        return chiefComplaint.length > 50 ? chiefComplaint.substring(0, 50) + '...' : chiefComplaint;
+                                                    })()}
+                                                </td>
+                                                <td>
+                                                    {(consultation.diagnosis || 'Not specified').substring(0, 30)}
+                                                    {consultation.diagnosis && consultation.diagnosis.length > 30 ? '...' : ''}
+                                                </td>
+                                                <td>
+                                                    <span className={`badge ${status === 'Completed' ? 'bg-success' : 'bg-info'}`}>
+                                                        {status}
+                                                    </span>
+                                                </td>
+                                                <td>
                                                     <button 
-                                                        className="btn btn-sm btn-warning ms-2" 
-                                                        onClick={() => editConsultation(consultation.visit_id, patient.id)}
+                                                        className="btn btn-sm btn-info" 
+                                                        onClick={() => viewConsultationDetails(consultation.id)}
                                                     >
-                                                        <i className="fas fa-edit"></i> Edit
+                                                        <i className="fas fa-eye"></i> View
                                                     </button>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    );
-                                })
-                            )}
-                        </tbody>
-                    </table>
+                                                    {status !== 'Completed' && patient && (
+                                                        <button 
+                                                            className="btn btn-sm btn-warning ms-2" 
+                                                            onClick={() => editConsultation(consultation.visit_id, patient.id)}
+                                                        >
+                                                            <i className="fas fa-edit"></i> Edit
+                                                        </button>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
-            {/* Consultation Details Modal */}
+            {/* Consultation Details Modal - Outside the card */}
             {showDetailsModal && consultationDetails && (
                 <div 
                     className="modal show d-block" 
                     tabIndex="-1" 
                     style={{ 
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
                         backgroundColor: 'rgba(0,0,0,0.6)',
-                        backdropFilter: 'blur(4px)'
+                        backdropFilter: 'blur(4px)',
+                        zIndex: 9999
                     }}
                     onClick={(e) => {
                         if (e.target === e.currentTarget) {
@@ -772,7 +780,7 @@ function Consultations({ currentUser, db, setActiveView }) {
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 }
 
