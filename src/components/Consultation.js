@@ -11,10 +11,12 @@ function Consultation({ visitId, patientId, currentUser, db, onBack }) {
         physicalExam: '',
         diagnosis: '',
         plan: '',
-        prescription: ''
+        prescription: '',
+        ultrasound: ''
     });
     const [selectedTests, setSelectedTests] = useState([]);
     const [otherTests, setOtherTests] = useState('');
+    const [ultrasoundPreview, setUltrasoundPreview] = useState('');
 
     const labTests = [
         'CBC', 'Urinalysis', 'Pregnancy Test', 'Blood Glucose', 'HIV Test', 'Ultrasound',
@@ -49,6 +51,10 @@ function Consultation({ visitId, patientId, currentUser, db, onBack }) {
                     const historyMatch = notes.match(/History:\s*(.+?)(?:\n|$)/);
                     const physicalExamMatch = notes.match(/Physical Exam:\s*(.+?)(?:\n|$)/);
                     const planMatch = notes.match(/Plan:\s*(.+?)(?:\n|$)/);
+                    const ultrasoundMatch = notes.match(/Ultrasound:\s*\[IMAGE:(.+?)\]/);
+                    
+                    const ultrasoundImage = ultrasoundMatch ? ultrasoundMatch[1] : '';
+                    setUltrasoundPreview(ultrasoundImage);
                     
                     setFormData({
                         chiefComplaint: chiefComplaintMatch ? chiefComplaintMatch[1].trim() : '',
@@ -56,7 +62,8 @@ function Consultation({ visitId, patientId, currentUser, db, onBack }) {
                         physicalExam: physicalExamMatch ? physicalExamMatch[1].trim() : '',
                         diagnosis: consultationData.diagnosis || '',
                         plan: planMatch ? planMatch[1].trim() : '',
-                        prescription: prescriptionData?.medication || ''
+                        prescription: prescriptionData?.medication || '',
+                        ultrasound: ultrasoundImage
                     });
                 }
             } catch (err) {
@@ -75,6 +82,29 @@ function Consultation({ visitId, patientId, currentUser, db, onBack }) {
         );
     };
 
+    const handleUltrasoundUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const base64String = reader.result;
+                    setUltrasoundPreview(base64String);
+                    setFormData({...formData, ultrasound: base64String});
+                };
+                reader.readAsDataURL(file);
+            } else {
+                alert('Please select an image file');
+                e.target.value = '';
+            }
+        }
+    };
+
+    const removeUltrasound = () => {
+        setUltrasoundPreview('');
+        setFormData({...formData, ultrasound: ''});
+    };
+
     const saveConsultation = async (complete = false) => {
         if (!formData.chiefComplaint.trim()) {
             alert('Please enter chief complaint');
@@ -89,7 +119,8 @@ function Consultation({ visitId, patientId, currentUser, db, onBack }) {
                 formData.chiefComplaint && `Chief Complaint: ${formData.chiefComplaint}`,
                 formData.history && `History: ${formData.history}`,
                 formData.physicalExam && `Physical Exam: ${formData.physicalExam}`,
-                formData.plan && `Plan: ${formData.plan}`
+                formData.plan && `Plan: ${formData.plan}`,
+                formData.ultrasound && `Ultrasound: [IMAGE:${formData.ultrasound}]`
             ].filter(Boolean).join('\n\n');
             
             if (consultationData) {
@@ -352,6 +383,67 @@ function Consultation({ visitId, patientId, currentUser, db, onBack }) {
                             value={formData.plan}
                             onChange={(e) => setFormData({...formData, plan: e.target.value})}
                         />
+                    </div>
+                    
+                    <div className="card mb-3">
+                        <div className="card-header">
+                            <i className="fas fa-image"></i> Ultrasound
+                        </div>
+                        <div className="card-body">
+                            <div className="mb-3">
+                                <label className="form-label">Upload Ultrasound Image</label>
+                                <input 
+                                    type="file" 
+                                    className="form-control" 
+                                    accept="image/*"
+                                    onChange={handleUltrasoundUpload}
+                                />
+                                <small className="text-muted">Supported formats: JPG, PNG, GIF</small>
+                            </div>
+                            {ultrasoundPreview && (
+                                <div className="mt-3">
+                                    <div className="d-flex justify-content-between align-items-center mb-2">
+                                        <strong>Uploaded Image:</strong>
+                                        <button 
+                                            type="button" 
+                                            className="btn btn-sm btn-danger"
+                                            onClick={removeUltrasound}
+                                        >
+                                            <i className="fas fa-times"></i> Remove
+                                        </button>
+                                    </div>
+                                    <div className="border rounded p-2" style={{ backgroundColor: '#f8f9fa' }}>
+                                        <img 
+                                            src={ultrasoundPreview} 
+                                            alt="Ultrasound" 
+                                            style={{
+                                                maxWidth: '100%',
+                                                maxHeight: '400px',
+                                                borderRadius: '8px',
+                                                cursor: 'pointer',
+                                                display: 'block',
+                                                margin: '0 auto'
+                                            }}
+                                            onClick={() => {
+                                                const newWindow = window.open();
+                                                newWindow.document.write(`
+                                                    <html>
+                                                        <head><title>Ultrasound Image</title></head>
+                                                        <body style="margin:0;padding:20px;text-align:center;background:#f5f5f5;">
+                                                            <h2>Ultrasound</h2>
+                                                            <img src="${ultrasoundPreview}" style="max-width:100%;height:auto;border-radius:8px;box-shadow:0 4px 8px rgba(0,0,0,0.1);" />
+                                                        </body>
+                                                    </html>
+                                                `);
+                                            }}
+                                        />
+                                        <small className="text-muted d-block mt-2 text-center">
+                                            <i className="fas fa-info-circle"></i> Click image to view full size
+                                        </small>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                     
                     <div className="card mb-3">
