@@ -505,7 +505,7 @@ function PublicPatientView({ patientId, db, currentUser, currentRole, onLogout }
         doc.setFont(undefined, 'bold');
         doc.text('Phone:', margin + 8, yPos + 8);
         doc.setFont(undefined, 'normal');
-        doc.text('0634026635', margin + 30, yPos + 8);
+        doc.text('04026635', margin + 30, yPos + 8);
         
         doc.setFont(undefined, 'bold');
         doc.text('Location:', margin + 8, yPos + 15);
@@ -1048,7 +1048,7 @@ function PublicPatientView({ patientId, db, currentUser, currentRole, onLogout }
                         
                         <div className="contact-buttons">
                             <a 
-                                href="tel:+252634026635" 
+                                href="tel:+2524026635" 
                                 className="btn btn-outline-primary btn-contact"
                             >
                                 <i className="fas fa-phone"></i> Call Clinic
@@ -1056,7 +1056,7 @@ function PublicPatientView({ patientId, db, currentUser, currentRole, onLogout }
                             
                             <button 
                                 className="btn btn-success btn-contact"
-                                onClick={() => openWhatsApp('252634026635')}
+                                onClick={() => openWhatsApp('2524026635')}
                             >
                                 <i className="fab fa-whatsapp"></i> WhatsApp
                             </button>

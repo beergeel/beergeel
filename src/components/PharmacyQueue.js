@@ -141,7 +141,7 @@ function PharmacyQueue({ currentUser, db, setActiveView }) {
                 
                 console.log('Quantity to dispense:', quantityToDispense, extracted.unit);
                 
-                // Reduce pharmacy stock if medication is found
+                // Check stock availability BEFORE dispensing
                 if (quantityToDispense > 0) {
                     try {
                         const allStock = await db.getAll('pharmacy_stock');
@@ -165,53 +165,63 @@ function PharmacyQueue({ currentUser, db, setActiveView }) {
                             });
                         }
                         
-                        if (stockItem) {
-                            const currentStock = parseInt(stockItem.quantity) || 0;
-                            const newQuantity = Math.max(0, currentStock - quantityToDispense);
-                            
-                            if (newQuantity < currentStock) {
-                                await db.update('pharmacy_stock', stockItem.id, { 
-                                    quantity: newQuantity 
-                                });
-                                console.log(`Stock reduced: ${stockItem.medication_name} from ${currentStock} to ${newQuantity}`);
-                                
-                                if (newQuantity === 0) {
-                                    alert(`Prescription dispensed! Warning: ${stockItem.medication_name} is now out of stock.`);
-                                } else if (newQuantity <= (stockItem.reorder_level || 10)) {
-                                    alert(`Prescription dispensed! Warning: ${stockItem.medication_name} is running low (${newQuantity} remaining).`);
-                                }
-                            }
-                        } else {
-                            console.warn('Medication not found in stock:', prescription.medication || prescription.drugs);
-                            // Continue with dispensing even if stock not found
+                        // Check if medication is available in stock
+                        if (!stockItem) {
+                            alert('Not available');
+                            return; // Stop here, don't dispense
                         }
+                        
+                        // Check if sufficient quantity is available
+                        const currentStock = parseInt(stockItem.quantity) || 0;
+                        if (currentStock < quantityToDispense) {
+                            alert('Not available');
+                            return; // Stop here, don't dispense
+                        }
+                        
+                        // Stock is available and sufficient, proceed with deduction and dispensing
+                        const newQuantity = currentStock - quantityToDispense;
+                        await db.update('pharmacy_stock', stockItem.id, { 
+                            quantity: newQuantity 
+                        });
+                        console.log(`Stock reduced: ${stockItem.medication_name} from ${currentStock} to ${newQuantity}`);
+                        
+                        // Update prescription status
+                        await db.update('prescriptions', prescription.id, { 
+                            status: 'dispensed',
+                            dispensed_by: currentUser.id,
+                            dispensed_date: new Date().toISOString()
+                        });
+                        
+                        const allQueue = await db.getAll('queue');
+                        const queueItems = allQueue.filter(q => {
+                            if (q.visit_id === visitId) return true;
+                            if (q.visit_id == visitId) return true;
+                            if (String(q.visit_id) === String(visitId)) return true;
+                            return false;
+                        }).filter(q => q.department === 'pharmacy');
+                        
+                        await Promise.all(
+                            queueItems.map(item => db.update('queue', item.id, { status: 'completed' }))
+                        );
+                        
+                        // Show warnings if stock is low after dispensing
+                        if (newQuantity === 0) {
+                            alert(`Prescription dispensed successfully! Warning: ${stockItem.medication_name} is now out of stock.`);
+                        } else if (newQuantity <= (stockItem.reorder_level || 10)) {
+                            alert(`Prescription dispensed successfully! Warning: ${stockItem.medication_name} is running low (${newQuantity} remaining).`);
+                        } else {
+                            alert('Prescription dispensed successfully!');
+                        }
+                        
+                        await loadData();
                     } catch (stockErr) {
-                        console.error('Error updating stock:', stockErr);
-                        // Continue with dispensing even if stock update fails
+                        console.error('Error checking/updating stock:', stockErr);
+                        alert('Error checking stock. Please try again.');
+                        return; // Stop on error
                     }
+                } else {
+                    alert('Invalid quantity to dispense.');
                 }
-                
-                // Update prescription status
-                await db.update('prescriptions', prescription.id, { 
-                    status: 'dispensed',
-                    dispensed_by: currentUser.id,
-                    dispensed_date: new Date().toISOString()
-                });
-                
-                const allQueue = await db.getAll('queue');
-                const queueItems = allQueue.filter(q => {
-                    if (q.visit_id === visitId) return true;
-                    if (q.visit_id == visitId) return true;
-                    if (String(q.visit_id) === String(visitId)) return true;
-                    return false;
-                }).filter(q => q.department === 'pharmacy');
-                
-                await Promise.all(
-                    queueItems.map(item => db.update('queue', item.id, { status: 'completed' }))
-                );
-                
-                alert('Prescription dispensed successfully!');
-                await loadData();
             } else {
                 console.error('Prescription not found for visit:', visitId);
                 console.error('Available prescriptions visit_ids:', allPrescriptions.map(p => ({ id: p.id, visit_id: p.visit_id })));

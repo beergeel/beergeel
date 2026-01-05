@@ -145,7 +145,7 @@ function PatientTickets({ db, currentUser }) {
 
     const shareViaWhatsApp = (ticket) => {
         const link = `${window.location.origin}/ticket/${ticket.ticket_code}`;
-        const message = `Hello ${ticket.patient?.name},\n\nYour appointment ticket for Beergeel Clinic:\n\nTicket Code: ${ticket.ticket_code}\nTicket Number: ${ticket.ticket_number}\nPurpose: ${ticket.purpose || 'Consultation'}\n${ticket.appointment_date ? `Appointment: ${new Date(ticket.appointment_date).toLocaleString()}` : ''}\n\nView your ticket: ${link}\n\nBeergeel Obstetrics and Gynecology Clinic\nContact: 0634026635`;
+        const message = `Hello ${ticket.patient?.name},\n\nYour appointment ticket for Beergeel Clinic:\n\nTicket Code: ${ticket.ticket_code}\nTicket Number: ${ticket.ticket_number}\nPurpose: ${ticket.purpose || 'Consultation'}\n${ticket.appointment_date ? `Appointment: ${new Date(ticket.appointment_date).toLocaleString()}` : ''}\n\nView your ticket: ${link}\n\nBeergeel Obstetrics and Gynecology Clinic\nContact: 04026635`;
         
         const whatsappLink = `https://wa.me/${ticket.whatsapp_number.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
         window.open(whatsappLink, '_blank');
@@ -229,7 +229,7 @@ function PatientTickets({ db, currentUser }) {
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
             doc.text('Xero awr kasoo horjeedka Ayuub Restaurant inyar ka xiga dhanka Masjid Nuur', pageWidth / 2, 23, { align: 'center' });
-            doc.text('Contact: 0634026635 (Mobile/WhatsApp)', pageWidth / 2, 30, { align: 'center' });
+            doc.text('Contact: 04026635 (Mobile/WhatsApp)', pageWidth / 2, 30, { align: 'center' });
 
             // Reset text color
             doc.setTextColor(0, 0, 0);
@@ -485,7 +485,7 @@ function PatientTickets({ db, currentUser }) {
                                 <input 
                                     type="text"
                                     className="form-control"
-                                    placeholder="e.g., 252634026635"
+                                    placeholder="e.g., 2524026635"
                                     value={whatsappNumber}
                                     onChange={(e) => setWhatsappNumber(e.target.value)}
                                     disabled={!selectedPatient}

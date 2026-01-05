@@ -73,7 +73,7 @@ function PublicTicketView({ ticketCode, db }) {
             doc.setFont('helvetica', 'normal');
             doc.text('Takhasusuka sare ee xanuunada dumarka', pageWidth / 2, 28, { align: 'center' });
             doc.text('Xero awr kasoo horjeedka Ayuub Restaurant inyar ka xiga dhanka Masjid Nuur', pageWidth / 2, 35, { align: 'center' });
-            doc.text('Contact: 0634026635 (Mobile/WhatsApp)', pageWidth / 2, 42, { align: 'center' });
+            doc.text('Contact: 04026635 (Mobile/WhatsApp)', pageWidth / 2, 42, { align: 'center' });
 
             // Ticket Code Section
             doc.setFillColor(248, 249, 250);
@@ -171,7 +171,7 @@ function PublicTicketView({ ticketCode, db }) {
             y += 6;
             doc.text('• For rescheduling, contact us via phone or WhatsApp', 25, y);
             y += 6;
-            doc.text('• For emergencies, call immediately: 0634026635', 25, y);
+            doc.text('• For emergencies, call immediately: 04026635', 25, y);
 
             // Clinic Hours
             y += 18;
@@ -351,7 +351,7 @@ function PublicTicketView({ ticketCode, db }) {
                         
                         <div className="contact-buttons">
                             <a 
-                                href="tel:+252634026635" 
+                                href="tel:+2524026635" 
                                 className="btn btn-outline-primary btn-contact"
                             >
                                 <i className="fas fa-phone"></i> Call Clinic
@@ -359,7 +359,7 @@ function PublicTicketView({ ticketCode, db }) {
                             
                             <button 
                                 className="btn btn-success btn-contact"
-                                onClick={() => openWhatsApp(ticket.whatsapp_number || '252634026635')}
+                                onClick={() => openWhatsApp(ticket.whatsapp_number || '2524026635')}
                             >
                                 <i className="fab fa-whatsapp"></i> WhatsApp
                             </button>

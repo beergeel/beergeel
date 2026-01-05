@@ -111,7 +111,7 @@ function PatientList({ currentUser, currentRole, db, setActiveView }) {
     const shareViaWhatsApp = (patientId, patientMobile, patientName) => {
         const baseUrl = window.location.origin;
         const patientLink = `${baseUrl}/patient/${patientId}`;
-        const whatsappNumber = '252634026635'; // Clinic WhatsApp number
+        const whatsappNumber = '2524026635'; // Clinic WhatsApp number
         const message = `Hello ${patientName}, here is your link to view your medical information at Beergeel Clinic:\n\n${patientLink}\n\nPlease save this link to access your records anytime.`;
         const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
         window.open(whatsappLink, '_blank');
@@ -175,7 +175,7 @@ function PatientList({ currentUser, currentRole, db, setActiveView }) {
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
             doc.text('Xero awr kasoo horjeedka Ayuub Restaurant inyar ka xiga dhanka Masjid Nuur', pageWidth / 2, 23, { align: 'center' });
-            doc.text('Contact: 0634026635 (Mobile/WhatsApp)', pageWidth / 2, 30, { align: 'center' });
+            doc.text('Contact: 04026635 (Mobile/WhatsApp)', pageWidth / 2, 30, { align: 'center' });
 
             // Reset text color
             doc.setTextColor(0, 0, 0);
