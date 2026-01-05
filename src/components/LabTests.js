@@ -47,42 +47,41 @@ function LabTests({ currentUser, db, setActiveView }) {
     }
 
     return (
-        <div className="card">
-            <div className="card-header">
-                <i className="fas fa-flask"></i> All Lab Tests
-                <span className="badge bg-primary ms-2">{labRequests.length} Total</span>
-            </div>
-            <div className="card-body">
-                <div className="table-responsive">
-                    <table className="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Patient</th>
-                                <th>Date</th>
-                                <th>Tests</th>
-                                <th>Results</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {labRequests.length === 0 ? (
+        <>
+            <div className="card">
+                <div className="card-header">
+                    <i className="fas fa-flask"></i> All Lab Tests
+                    <span className="badge bg-primary ms-2">{labRequests.length} Total</span>
+                </div>
+                <div className="card-body">
+                    <div className="table-responsive">
+                        <table className="table table-hover">
+                            <thead>
                                 <tr>
-                                    <td colSpan="5" className="text-center text-muted">No lab tests found</td>
+                                    <th>Patient</th>
+                                    <th>Date</th>
+                                    <th>Tests</th>
+                                    <th>Results</th>
+                                    <th>Status</th>
                                 </tr>
-                            ) : (
-                                labRequests.map(request => {
-                                    const visit = visits.find(v => v.id == request.visit_id);
-                                    const patient = patients.find(p => p.id == visit?.patient_id);
-                                    const hasImage = request.results && request.results.includes('[IMAGE:');
-                                    
-                                    return (
-                                        <tr key={request.id}>
-                                            <td>{patient?.name || 'Unknown'}</td>
-                                            <td>{new Date(request.created_date).toLocaleDateString()}</td>
-                                            <td>{request.test_name || 'N/A'}</td>
-                                            <td>
-                                                {request.results ? (
-                                                    hasImage ? (
+                            </thead>
+                            <tbody>
+                                {labRequests.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="5" className="text-center text-muted">No lab tests found</td>
+                                    </tr>
+                                ) : (
+                                    labRequests.map(request => {
+                                        const visit = visits.find(v => v.id == request.visit_id);
+                                        const patient = patients.find(p => p.id == visit?.patient_id);
+                                        
+                                        return (
+                                            <tr key={request.id}>
+                                                <td>{patient?.name || 'Unknown'}</td>
+                                                <td>{new Date(request.created_date).toLocaleDateString()}</td>
+                                                <td>{request.test_name || 'N/A'}</td>
+                                                <td>
+                                                    {request.results ? (
                                                         <button 
                                                             className="btn btn-sm btn-primary"
                                                             onClick={() => {
@@ -90,38 +89,42 @@ function LabTests({ currentUser, db, setActiveView }) {
                                                                 setShowResultsModal(true);
                                                             }}
                                                         >
-                                                            <i className="fas fa-image me-1"></i>
+                                                            <i className="fas fa-file-alt me-1"></i>
                                                             View Results
                                                         </button>
                                                     ) : (
-                                                        <span>{request.results}</span>
-                                                    )
-                                                ) : (
-                                                    'Pending'
-                                                )}
-                                            </td>
-                                            <td>
-                                                <span className={`badge ${request.status === 'completed' ? 'bg-success' : 'bg-warning'}`}>
-                                                    {request.status || 'pending'}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    );
-                                })
-                            )}
-                        </tbody>
-                    </table>
+                                                        'Pending'
+                                                    )}
+                                                </td>
+                                                <td>
+                                                    <span className={`badge ${request.status === 'completed' ? 'bg-success' : 'bg-warning'}`}>
+                                                        {request.status || 'pending'}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
-            {/* Results Modal with Image Support */}
+            {/* Results Modal with Image Support - Outside the card */}
             {showResultsModal && selectedResult && (
                 <div 
                     className="modal show d-block" 
                     tabIndex="-1" 
                     style={{ 
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
                         backgroundColor: 'rgba(0,0,0,0.6)',
-                        backdropFilter: 'blur(4px)'
+                        backdropFilter: 'blur(4px)',
+                        zIndex: 9999
                     }}
                     onClick={(e) => {
                         if (e.target === e.currentTarget) {
@@ -244,7 +247,7 @@ function LabTests({ currentUser, db, setActiveView }) {
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 }
 
