@@ -45,7 +45,7 @@ function RegisterPatient({ currentUser, db, setActiveView }) {
                 return;
             }
 
-            alert(`Patient registered successfully!\n\nLogin ID (Mobile): ${mobile}\nPassword: ${password}\n\nPlease provide this information to the patient.`);
+            alert('Registration successfully');
             setActiveView('dashboard');
         } catch (err) {
             console.error('Error registering patient:', err);
