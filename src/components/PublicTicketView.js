@@ -261,7 +261,7 @@ function PublicTicketView({ ticketCode, db }) {
                             e.target.src = "https://via.placeholder.com/80x80/1e3c72/ffffff?text=OBGYN";
                         }}
                     />
-                    <h3 className="clinic-name" style={{ color: '#000000' }}>Beergeel Obstetrics and Gynecology Clinic</h3>
+                    <h3 className="clinic-name" style={{ color: '#000000', fontWeight: 'bold' }}>Beergeel Obstetrics and Gynecology Clinic</h3>
                     <p className="clinic-tagline">Takhasusuka sare ee xanuunada dumarka</p>
                 </div>
 

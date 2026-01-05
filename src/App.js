@@ -4,6 +4,7 @@ import MainApp from './components/MainApp';
 import PublicTicketView from './components/PublicTicketView';
 import PublicPatientView from './components/PublicPatientView';
 import SupabaseDB from './utils/supabaseDB';
+import { AlertProvider } from './components/AlertModal';
 
 const db = new SupabaseDB();
 
@@ -47,9 +48,11 @@ function App() {
     // If viewing a ticket, show PublicTicketView
     if (ticketCode) {
         return (
-            <div className="App">
-                <PublicTicketView ticketCode={ticketCode} db={db} />
-            </div>
+            <AlertProvider>
+                <div className="App">
+                    <PublicTicketView ticketCode={ticketCode} db={db} />
+                </div>
+            </AlertProvider>
         );
     }
 
@@ -57,41 +60,47 @@ function App() {
     if (patientId) {
         if (!isLoggedIn) {
             return (
-                <div className="App">
-                    <HomePage 
-                        onLogin={handleLogin} 
-                        db={db}
-                        redirectToPatient={patientId}
-                    />
-                </div>
+                <AlertProvider>
+                    <div className="App">
+                        <HomePage 
+                            onLogin={handleLogin} 
+                            db={db}
+                            redirectToPatient={patientId}
+                        />
+                    </div>
+                </AlertProvider>
             );
         }
         return (
-            <div className="App">
-                <PublicPatientView 
-                    patientId={patientId} 
-                    db={db}
-                    currentUser={currentUser}
-                    currentRole={currentRole}
-                    onLogout={handleLogout}
-                />
-            </div>
+            <AlertProvider>
+                <div className="App">
+                    <PublicPatientView 
+                        patientId={patientId} 
+                        db={db}
+                        currentUser={currentUser}
+                        currentRole={currentRole}
+                        onLogout={handleLogout}
+                    />
+                </div>
+            </AlertProvider>
         );
     }
 
     return (
-        <div className="App">
-            {!isLoggedIn ? (
-                <HomePage onLogin={handleLogin} db={db} />
-            ) : (
-                <MainApp 
-                    currentUser={currentUser} 
-                    currentRole={currentRole} 
-                    onLogout={handleLogout}
-                    db={db}
-                />
-            )}
-        </div>
+        <AlertProvider>
+            <div className="App">
+                {!isLoggedIn ? (
+                    <HomePage onLogin={handleLogin} db={db} />
+                ) : (
+                    <MainApp 
+                        currentUser={currentUser} 
+                        currentRole={currentRole} 
+                        onLogout={handleLogout}
+                        db={db}
+                    />
+                )}
+            </div>
+        </AlertProvider>
     );
 }
 
